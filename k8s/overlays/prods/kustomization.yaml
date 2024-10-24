@@ -1,0 +1,9 @@
+resources:
+  - ../../base
+
+images:
+  - name: shirocola/hello-api
+    newTag: "latest"
+
+patchesStrategicMerge:
+  - replicas.yaml
