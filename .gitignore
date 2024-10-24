@@ -1,0 +1,15 @@
+# Terraform local state files
+*.tfstate
+*.tfstate.backup
+
+# Lock file
+.terraform.lock.hcl
+
+# Terraform working directory
+.terraform/
+
+# Provider binaries
+terraform-provider-google_*
+
+# JSON or sensitive output files
+*.json

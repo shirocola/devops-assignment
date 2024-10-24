@@ -5,7 +5,7 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 4.79.0" # Latest version as of October 2023
+      version = "~> 4.79.0" # Adjust as necessary
     }
   }
 }
@@ -14,6 +14,7 @@ terraform {
 provider "google" {
   project = var.project_id
   region  = var.region
+  zone    = var.zone
 }
 
 # Enable necessary GCP APIs
@@ -40,23 +41,53 @@ resource "google_compute_subnetwork" "subnet" {
   region                   = var.region
   network                  = google_compute_network.vpc_network.id
   private_ip_google_access = true
+
+  # Define secondary IP ranges for GKE Pods and Services
+  secondary_ip_range {
+    range_name    = "gke-pods"
+    ip_cidr_range = "10.1.0.0/16"
+  }
+
+  secondary_ip_range {
+    range_name    = "gke-services"
+    ip_cidr_range = "10.2.0.0/20"
+  }
 }
 
-# Create a GKE cluster with Workload Identity enabled
+# Create a Cloud Router for NAT
+resource "google_compute_router" "nat_router" {
+  name    = "nat-router"
+  network = google_compute_network.vpc_network.self_link
+  region  = var.region
+}
+
+# Create a Cloud NAT configuration
+resource "google_compute_router_nat" "nat_config" {
+  name                               = "nat-config"
+  router                             = google_compute_router.nat_router.name
+  region                             = var.region
+  nat_ip_allocate_option             = "AUTO_ONLY"
+  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+}
+
+# Create a GKE cluster (Zonal) with adjusted resources
 resource "google_container_cluster" "primary" {
   name     = "my-gke-cluster"
-  location = var.region
+  location = var.zone # Use zone for zonal cluster
 
   network    = google_compute_network.vpc_network.id
   subnetwork = google_compute_subnetwork.subnet.id
 
   remove_default_node_pool = true
+  initial_node_count       = 1
 
+  # Enable VPC-native (alias IP) networking
   ip_allocation_policy {
     cluster_secondary_range_name  = "gke-pods"
     services_secondary_range_name = "gke-services"
   }
 
+  # Enable Workload Identity
   workload_identity_config {
     workload_pool = "${var.project_id}.svc.id.goog"
   }
@@ -74,18 +105,27 @@ resource "google_container_cluster" "primary" {
   # Enable logging and monitoring
   logging_service    = "logging.googleapis.com/kubernetes"
   monitoring_service = "monitoring.googleapis.com/kubernetes"
+
+  # Enable Shielded Nodes
+  enable_shielded_nodes = true
+
+  depends_on = [
+    google_project_service.project_services
+  ]
 }
 
 # Create a node pool for the GKE cluster
 resource "google_container_node_pool" "primary_nodes" {
   name       = "primary-node-pool"
-  location   = google_container_cluster.primary.location
+  location   = var.zone
   cluster    = google_container_cluster.primary.name
   node_count = var.node_count
 
   node_config {
     preemptible     = false
-    machine_type    = "e2-medium"
+    machine_type    = "e2-medium"      # Increased machine type
+    disk_size_gb    = 20               # Increased disk size
+    disk_type       = "pd-standard"    # Use standard disks
     service_account = google_service_account.gke_node_service_account.email
 
     metadata = {
@@ -112,6 +152,12 @@ resource "google_container_node_pool" "primary_nodes" {
   upgrade_settings {
     max_surge       = 1
     max_unavailable = 0
+  }
+
+  # Enable autoscaling
+  autoscaling {
+    min_node_count = 1
+    max_node_count = 3
   }
 }
 
@@ -143,7 +189,7 @@ resource "google_service_account" "gke_workload_service_account" {
 # Assign necessary roles to the workload service account
 resource "google_project_iam_member" "workload_sa_role" {
   project = var.project_id
-  role    = "roles/storage.admin" # Replace with the required role for your application
+  role    = "roles/storage.admin" # Replace with required role
   member  = "serviceAccount:${google_service_account.gke_workload_service_account.email}"
 }
 
@@ -151,5 +197,9 @@ resource "google_project_iam_member" "workload_sa_role" {
 resource "google_service_account_iam_member" "workload_identity_binding" {
   service_account_id = google_service_account.gke_workload_service_account.name
   role               = "roles/iam.workloadIdentityUser"
-  member             = "serviceAccount:${var.project_id}.svc.id.goog[hello-api-namespace/hello-api-sa]"
+  member             = "serviceAccount:${var.project_id}.svc.id.goog[default/hello-api-sa]"
+
+  depends_on = [
+    google_container_cluster.primary
+  ]
 }
