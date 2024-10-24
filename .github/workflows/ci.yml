@@ -1,0 +1,32 @@
+name: CI Pipeline
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+    
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v3
+
+            - name: Set up Go
+              uses: actions/setup-go@v3
+              with:
+                go-version: '1.21'
+
+            - name: Build the Docker Image
+              run: docker build -t your_dockerhub_username/hello-api:${{ github.sha }} .
+
+            - name: Update Image Tag in K8s Overlay
+              run: |
+                sed -i 's|newTag:.*|newTag: "'"${{ github.sha }}"'"|g' k8s/overlays/prod/kustomization.yaml
+      
+            - name: Commit and Push Changes
+              uses: stefanzweifel/git-auto-commit-action@v4
+              with:
+                commit_message: Update image tag to ${{ github.sha }}
+                file_pattern: k8s/overlays/prod/kustomization.yaml
