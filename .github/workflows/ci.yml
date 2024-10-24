@@ -19,7 +19,7 @@ jobs:
                 go-version: '1.21'
 
             - name: Build the Docker Image
-              run: docker build -t your_dockerhub_username/hello-api:${{ github.sha }} .
+              run: docker build -t {{ secrets.DOCKERHUB_USERNAME }}/hello-api:${{ github.sha }} .
 
             - name: Update Image Tag in K8s Overlay
               run: |
