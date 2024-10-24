@@ -19,7 +19,8 @@ jobs:
           go-version: '1.21'
 
       - name: Build the Docker Image
-        run: docker build -t $DOCKERHUB_USERNAME/hello-api:$DOCKER_IMAGE_TAG .
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/hello-api:${{ github.sha }} .
+        shell: bash
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -28,15 +29,19 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Push the Docker Image
-        run: docker push $DOCKERHUB_USERNAME/hello-api:$DOCKER_IMAGE_TAG
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/hello-api:${{ github.sha }}
+        shell: bash
 
       - name: Update Image Tag and Name in K8s Overlay
         run: |
-          sed -i "s|newTag:.*|newTag: '$DOCKER_IMAGE_TAG'|g" k8s/overlays/prod/kustomization.yaml
-          sed -i "s|newName:.*|newName: '$DOCKERHUB_USERNAME/hello-api'|g" k8s/overlays/prod/kustomization.yaml
+          sed -i "s|newTag:.*|newTag: '${{ github.sha }}'|g" k8s/overlays/prod/kustomization.yaml
+          sed -i "s|newName:.*|newName: '${{ secrets.DOCKERHUB_USERNAME }}/hello-api'|g" k8s/overlays/prod/kustomization.yaml
+        shell: bash
 
       - name: Commit and Push Changes
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: Update image tag to $DOCKER_IMAGE_TAG
+          commit_message: Update image tag to ${{ github.sha }}
           file_pattern: k8s/overlays/prod/kustomization.yaml
+          commit_user_name: GitHub Actions
+          commit_user_email: actions@github.com
