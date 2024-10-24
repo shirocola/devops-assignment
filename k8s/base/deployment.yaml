@@ -1,6 +1,6 @@
 apiversion: apps/v1
 kind: Deployment
-metadate:
+metadata:
   name: hello-api
   labels:
     app: hello-api
