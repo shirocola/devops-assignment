@@ -1,32 +1,46 @@
 name: CI Pipeline
 
 on:
-    push:
-        branches:
-            - main
+  push:
+    branches:
+      - main
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
-    
-        steps:
-            - name: Checkout Code
-              uses: actions/checkout@v3
+  build:
+    runs-on: ubuntu-latest
 
-            - name: Set up Go
-              uses: actions/setup-go@v3
-              with:
-                go-version: '1.21'
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKER_IMAGE_TAG: ${{ github.sha }}
 
-            - name: Build the Docker Image
-              run: docker build -t {{ secrets.DOCKERHUB_USERNAME }}/hello-api:${{ github.sha }} .
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-            - name: Update Image Tag in K8s Overlay
-              run: |
-                sed -i 's|newTag:.*|newTag: "'"${{ github.sha }}"'"|g' k8s/overlays/prod/kustomization.yaml
-      
-            - name: Commit and Push Changes
-              uses: stefanzweifel/git-auto-commit-action@v4
-              with:
-                commit_message: Update image tag to ${{ github.sha }}
-                file_pattern: k8s/overlays/prod/kustomization.yaml
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.21'
+
+      - name: Build the Docker Image
+        run: docker build -t $DOCKERHUB_USERNAME/hello-api:$DOCKER_IMAGE_TAG .
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push the Docker Image
+        run: docker push $DOCKERHUB_USERNAME/hello-api:$DOCKER_IMAGE_TAG
+
+      - name: Update Image Tag and Name in K8s Overlay
+        run: |
+          sed -i "s|newTag:.*|newTag: '$DOCKER_IMAGE_TAG'|g" k8s/overlays/prod/kustomization.yaml
+          sed -i "s|newName:.*|newName: '$DOCKERHUB_USERNAME/hello-api'|g" k8s/overlays/prod/kustomization.yaml
+
+      - name: Commit and Push Changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Update image tag to $DOCKER_IMAGE_TAG
+          file_pattern: k8s/overlays/prod/kustomization.yaml
