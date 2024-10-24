@@ -9,10 +9,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-      DOCKER_IMAGE_TAG: ${{ github.sha }}
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
