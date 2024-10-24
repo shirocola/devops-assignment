@@ -1,0 +1,21 @@
+apiversion: apps/v1
+kind: Deployment
+metadate:
+  name: hello-api
+  labels:
+    app: hello-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hello-api
+  template:
+    metadata:
+      labels:
+        app: hello-api
+    spec:
+      containers:
+        - name: hello-api
+          image: your_dockerhub_username/your_app_name:latest
+          ports:
+            - containerPort: 8080
