@@ -2,6 +2,7 @@ apiversion: v1
 kind: Service
 metadata:
   name: hello-api-service
+  namespace: hello-api-namespace
 spec:
   selector:
     app: hello-api
