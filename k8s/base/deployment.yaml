@@ -1,4 +1,4 @@
-apiversion: apps/v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hello-api
@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
         - name: hello-api
-          image: your_dockerhub_username/your_app_name:latest
+          image: shirocola/hello-api:latest
           ports:
             - containerPort: 8080

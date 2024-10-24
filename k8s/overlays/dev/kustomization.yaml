@@ -1,0 +1,9 @@
+resources:
+  - ../../base
+
+patches:
+  - replicas.yaml
+
+images:
+  - name: your_dockerhub_username/hello-api
+    newTag: 'dev_image_tag'
