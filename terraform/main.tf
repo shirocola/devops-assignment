@@ -5,7 +5,7 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 4.79.0"  # Latest version as of October 2023
+      version = "~> 4.79.0" # Latest version as of October 2023
     }
   }
 }
@@ -143,7 +143,7 @@ resource "google_service_account" "gke_workload_service_account" {
 # Assign necessary roles to the workload service account
 resource "google_project_iam_member" "workload_sa_role" {
   project = var.project_id
-  role    = "roles/storage.admin"  # Replace with the required role for your application
+  role    = "roles/storage.admin" # Replace with the required role for your application
   member  = "serviceAccount:${google_service_account.gke_workload_service_account.email}"
 }
 
