@@ -65,8 +65,8 @@ jobs:
           sudo apt-get update && sudo apt-get install -y google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin
 
           # Authenticate with the service account
-          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" > $GOOGLE_APPLICATION_CREDENTIALS
-          gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" > $HOME/gcloud-key.json
+          gcloud auth activate-service-account --key-file=$HOME/gcloud-key.json
           gcloud config set project <YOUR_PROJECT_ID>
           
           # Create the .kube directory if it doesn't exist
