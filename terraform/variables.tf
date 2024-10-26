@@ -1,6 +1,9 @@
+# variables.tf
+
 variable "project_id" {
   description = "GCP Project ID"
   type        = string
+  default     = "devops-assignment-439616"
 }
 
 variable "region" {
@@ -10,30 +13,21 @@ variable "region" {
 }
 
 variable "zone" {
-  description = "GCP Zone"
+  description = "GCP Zone for the GKE cluster"
   type        = string
   default     = "us-central1-a"
 }
 
-variable "node_count" {
-  description = "Number of nodes in node pool"
-  type        = number
-  default     = 1
+variable "cluster_name" {
+  description = "GKE Cluster Name"
+  type        = string
+  default     = "hello-api-cluster"
 }
 
-variable "argocd_namespace" {
-  description = "Namespace to deploy ArgoCD"
+variable "network_name" {
+  description = "VPC Network Name"
   type        = string
-  default     = "argocd"
+  default     = "hello-api-network"
 }
 
-variable "app_namespace" {
-  description = "Namespace to deploy the application"
-  type        = string
-  default     = "hello-api-namespace"
-}
 
-variable "cluster_server" {
-  description = "Kubernetes cluster server endpoint"
-  type        = string
-}
