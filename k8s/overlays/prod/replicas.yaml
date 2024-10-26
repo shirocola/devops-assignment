@@ -4,3 +4,16 @@ metadata:
   name: hello-api
 spec:
   replicas: 3
+  selector:
+    matchLabels:
+      app: hello-api
+  template:
+    metadata:
+      labels:
+        app: hello-api
+    spec:
+      containers:
+        - name: hello-api
+          image: shirocola/hello-api:latest  # Adjust the tag as needed
+          ports:
+            - containerPort: 80

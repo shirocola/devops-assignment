@@ -32,3 +32,8 @@ variable "app_namespace" {
   type        = string
   default     = "hello-api-namespace"
 }
+
+variable "cluster_server" {
+  description = "Kubernetes cluster server endpoint"
+  type        = string
+}

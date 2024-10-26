@@ -7,7 +7,3 @@ images:
 
 patchesStrategicMerge:
   - replicas.yaml
-
-images:
-  - name: shirocola/hello-api
-    newTag: 'f5485799128422b4a40d44b6f3568a95e55993bd'
