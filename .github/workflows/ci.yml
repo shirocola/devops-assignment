@@ -82,6 +82,15 @@ jobs:
 
           # Install ArgoCD CRDs if not present
           kubectl get crd applications.argoproj.io || kubectl apply -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/crds/application-crd.yaml
+
+
+          # Wait for the CRD to be available
+          n=0
+          until kubectl get crd applications.argoproj.io >/dev/null 2>&1 || [ "$n" -ge 5 ]; do
+            n=$((n+1))
+            echo "Waiting for applications.argoproj.io CRD to be available..."
+            sleep 5
+          done
           
           # Apply ArgoCD application
           kubectl apply -f argocd/argocd-app.yaml -n argocd
