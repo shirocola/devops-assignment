@@ -94,4 +94,6 @@ jobs:
           
           # Apply ArgoCD application
           kubectl apply -f argocd/argocd-app.yaml -n argocd
+          kubectl apply -f argocd/argocd-server-service.yaml
+
         shell: bash
