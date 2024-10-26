@@ -203,3 +203,9 @@ resource "google_service_account_iam_member" "workload_identity_binding" {
     google_container_cluster.primary
   ]
 }
+
+resource "google_project_service" "disable_services" {
+  project   = "devops-assignment-439616"
+  service   = "compute.googleapis.com"
+  disable_dependent_services = true
+}
