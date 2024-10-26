@@ -9,6 +9,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      DEPLOY_ARGOCD_APP: ${{ vars.DEPLOY_ARGOCD_APP }}  # Set DEPLOY_ARGOCD_APP globally
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -47,7 +50,7 @@ jobs:
           commit_user_email: actions@github.com
 
       - name: Apply ArgoCD Application (Optional)
-        if: env.DEPLOY_ARGOCD_APP == 'true'
+        if: ${{ env.DEPLOY_ARGOCD_APP == 'true' }}
         run: |
           echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
           kubectl apply -f argocd/argocd-app.yaml -n argocd
