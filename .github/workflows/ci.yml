@@ -79,6 +79,9 @@ jobs:
 
           # Decode and write the KUBECONFIG
           echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
+
+          # Install ArgoCD CRDs if not present
+          kubectl get crd applications.argoproj.io || kubectl apply -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/crds/application-crd.yaml
           
           # Apply ArgoCD application
           kubectl apply -f argocd/argocd-app.yaml -n argocd
