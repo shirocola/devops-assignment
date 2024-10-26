@@ -65,7 +65,7 @@ jobs:
           sudo apt-get update && sudo apt-get install -y google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin
 
           # Write JSON credentials to gcloud-key.json
-          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" | jq '.' > $HOME/gcloud-key.json
+           echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" | base64 --decode > $HOME/gcloud-key.json
 
           # Display and validate JSON format
           cat $HOME/gcloud-key.json | jq .
