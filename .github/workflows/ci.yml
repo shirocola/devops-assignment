@@ -52,12 +52,18 @@ jobs:
       - name: Apply ArgoCD Application (Optional)
         if: ${{ env.DEPLOY_ARGOCD_APP == 'true' }}
         run: |
-          # Install gke-gcloud-auth-plugin
-          gcloud components install gke-gcloud-auth-plugin --quiet
+          # Install Google Cloud SDK and gke-gcloud-auth-plugin
+          echo "Installing Google Cloud SDK and GKE auth plugin..."
+          sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates gnupg
+          echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+          sudo apt-get update && sudo apt-get install -y google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin
+          
           # Create the .kube directory if it doesn't exist
           mkdir -p $HOME/.kube
+
           # Decode and write the KUBECONFIG
           echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
+          
           # Apply ArgoCD application
           kubectl apply -f argocd/argocd-app.yaml -n argocd
         shell: bash
