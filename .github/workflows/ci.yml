@@ -52,6 +52,8 @@ jobs:
       - name: Apply ArgoCD Application (Optional)
         if: ${{ env.DEPLOY_ARGOCD_APP == 'true' }}
         run: |
+          # Install gke-gcloud-auth-plugin
+          gcloud components install gke-gcloud-auth-plugin --quiet
           # Create the .kube directory if it doesn't exist
           mkdir -p $HOME/.kube
           # Decode and write the KUBECONFIG
