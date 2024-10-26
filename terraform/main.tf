@@ -28,6 +28,21 @@ resource "google_project_service" "project_services" {
   service = each.key
 }
 
+# Call ArgoCD module
+module "argocd" {
+  source    = "./argocd"          # Adjust the path if necessary
+  namespace = "argocd"            # Set namespace for ArgoCD installation
+}
+
+# Call Application module (hello-api)
+module "app" {
+  source         = "./app"                  # Adjust the path if necessary
+  app_name       = "hello-api"              # Define your app name
+  app_namespace  = "hello-api-namespace"    # Define the namespace for the app
+  cluster_server = google_container_cluster.primary.endpoint
+  depends_on     = [module.argocd]          # Ensure ArgoCD is set up before deploying the app
+}
+
 # Create a VPC network
 resource "google_compute_network" "vpc_network" {
   name                    = "gke-vpc-network"

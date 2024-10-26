@@ -20,3 +20,15 @@ variable "node_count" {
   type        = number
   default     = 1
 }
+
+variable "argocd_namespace" {
+  description = "Namespace to deploy ArgoCD"
+  type        = string
+  default     = "argocd"
+}
+
+variable "app_namespace" {
+  description = "Namespace to deploy the application"
+  type        = string
+  default     = "hello-api-namespace"
+}
