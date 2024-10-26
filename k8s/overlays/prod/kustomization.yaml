@@ -3,7 +3,7 @@ resources:
 
 images:
   - name: shirocola/hello-api
-    newTag: 'eff7888dff057b7bc762a3ac62284c4e8500a49d'
+    newTag: 'e97cd0e5d94845ac782d031d735c27b298b63918'
 
 patchesStrategicMerge:
   - replicas.yaml
