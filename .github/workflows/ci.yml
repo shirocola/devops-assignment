@@ -65,8 +65,10 @@ jobs:
           sudo apt-get update && sudo apt-get install -y google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin
 
           # Write JSON credentials to gcloud-key.json
-          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" > $HOME/gcloud-key.json
-          cat $HOME/gcloud-key.json
+          printf "%s" "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" > $HOME/gcloud-key.json
+          
+          # Display and validate JSON format
+          cat $HOME/gcloud-key.json | jq .
 
           gcloud auth activate-service-account --key-file=$HOME/gcloud-key.json
           gcloud config set project devops-assignment-439616
