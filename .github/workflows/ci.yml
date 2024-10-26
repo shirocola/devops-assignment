@@ -52,14 +52,16 @@ jobs:
       - name: Apply ArgoCD Application (Optional)
         if: ${{ env.DEPLOY_ARGOCD_APP == 'true' }}
         run: |
-          # Install Google Cloud SDK and gke-gcloud-auth-plugin
-          echo "Installing Google Cloud SDK and GKE auth plugin..."
+          # Install prerequisites
           sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates gnupg
-          
-          # Add the Google Cloud public key
-          curl -sSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo tee /usr/share/keyrings/cloud.google.gpg >/dev/null
-          
+
+          # Import the Google Cloud public key
+          curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+
+          # Add the Google Cloud SDK repository to apt sources
           echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+
+          # Update and install Google Cloud SDK and GKE auth plugin
           sudo apt-get update && sudo apt-get install -y google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin
           
           # Create the .kube directory if it doesn't exist
