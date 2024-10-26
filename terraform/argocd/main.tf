@@ -20,7 +20,3 @@ resource "helm_release" "argocd" {
     EOF
   ]
 }
-
-output "argocd_url" {
-  value = helm_release.argocd.status.load_balancer[0].ingress[0].hostname
-}
