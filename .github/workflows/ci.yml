@@ -45,3 +45,12 @@ jobs:
           file_pattern: k8s/overlays/prod/kustomization.yaml
           commit_user_name: GitHub Actions
           commit_user_email: actions@github.com
+      # Optional ArgoCD Application Deployment Step
+      - name: Apply ArgoCD Application (Optional)
+        if: env.DEPLOY_ARGOCD_APP == 'true'  # Only run if DEPLOY_ARGOCD_APP is set to true
+        run: |
+          echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
+          kubectl apply -f argocd/argocd-app.yaml -n argocd
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+        shell: bash
