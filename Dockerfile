@@ -19,6 +19,9 @@ RUN go build -o hello-api
 # Stage 2: Create runtime image
 FROM alpine:latest
 
+# Add a non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
 # Set working dir inside container
 WORKDIR /app
 
@@ -27,6 +30,12 @@ COPY --from=builder /app/hello-api .
 
 # Expose port
 EXPOSE 8080
+
+# Change ownership of the app files
+RUN chown appuser:appgroup /app/hello-api
+
+# Health check route (assuming your application has a /health endpoint)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD curl -f http://localhost:8080/health || exit 1
 
 # Run the application
 CMD [ "./hello-api" ]
