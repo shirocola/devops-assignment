@@ -45,7 +45,9 @@ jobs:
 
       - name: Build the Docker Image
         if: env.build == 'true'
-        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/hello-api:${{ github.sha }} .
+        run: |
+          set -e  # Exit immediately if a command exits with a non-zero status
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/hello-api:${{ github.sha }} .
         shell: bash
 
       - name: Log in to Docker Hub
@@ -57,7 +59,9 @@ jobs:
 
       - name: Push the Docker Image
         if: env.build == 'true'
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/hello-api:${{ github.sha }}
+        run: |
+          set -e  # Exit immediately if a command exits with a non-zero status
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/hello-api:${{ github.sha }}
         shell: bash
 
       - name: Update Image Tag and Name in K8s Overlay
