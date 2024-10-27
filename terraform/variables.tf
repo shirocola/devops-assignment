@@ -35,5 +35,10 @@ variable "credentials_file" {
   type        = string
 }
 
+variable "gcp_service_account_email" {
+  description = "GCP Service Account Email"
+  type        = string
+}
+
 
 
