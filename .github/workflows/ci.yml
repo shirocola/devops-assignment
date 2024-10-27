@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch the entire history for accurate commit references
 
       - name: Debug Commit Info
         run: |
@@ -21,12 +23,18 @@ jobs:
       - name: Determine Changed Files
         id: changed-files
         run: |
-              echo "Checking for changes in the following files:"
-              git fetch origin  # Ensure you have the latest changes
+            echo "Checking for changes in the following files:"
+            git fetch origin  # Ensure you have the latest changes
+            # Check if there is a previous commit reference
+            if [ -z "${{ github.event.before }}" ]; then
+              echo "No previous commit found. Skipping change detection."
+              echo "changed_files=''" >> $GITHUB_ENV
+            else
               git diff --name-only ${{ github.event.before }} ${{ github.sha }} > changed_files.txt
               cat changed_files.txt
               echo "changed_files=$(cat changed_files.txt | tr '\n' ' ')" >> $GITHUB_ENV
-              
+            fi  
+
       - name: Check for Application Changes
         id: app-changes
         run: |
