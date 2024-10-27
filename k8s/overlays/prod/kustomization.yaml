@@ -3,7 +3,7 @@ resources:
 
 images:
   - name: shirocola/hello-api
-    newTag: 'f758082517023923f5326b89b99959f18e0eb48c'
+    newTag: '${{ steps.build.outputs.imageTag }}'  # Assume imageTag is set in a previous step
 
 patchesStrategicMerge:
   - replicas.yaml
