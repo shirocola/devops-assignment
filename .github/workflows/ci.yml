@@ -22,6 +22,7 @@ jobs:
         id: changed-files
         run: |
           echo "Checking for changes in the following files:"
+          git fetch origin  # Ensure you have the latest changes
           git diff --name-only ${{ github.event.before }} ${{ github.sha }} > changed_files.txt
           cat changed_files.txt
           echo "changed_files=$(cat changed_files.txt | tr '\n' ' ')" >> $GITHUB_ENV
@@ -79,6 +80,8 @@ jobs:
           file_pattern: k8s/overlays/prod/kustomization.yaml
           commit_user_name: GitHub Actions
           commit_user_email: actions@github.com
+          # Only commit if the file has been modified
+          allow_empty_commit: true # Optional: use if needed
 
       - name: Apply ArgoCD Application
         if: env.build == 'true' && ${{ vars.DEPLOY_ARGOCD_APP }} == 'true'
