@@ -30,4 +30,10 @@ variable "network_name" {
   default     = "hello-api-network"
 }
 
+variable "credentials_file" {
+  description = "Path to the GCP service account JSON credentials file"
+  type        = string
+}
+
+
 
