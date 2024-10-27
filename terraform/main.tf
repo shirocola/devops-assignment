@@ -36,6 +36,21 @@ resource "google_container_cluster" "primary" {
   }
 }
 
+# Secret Management
+data "google_secret_manager_secret_version" "my_secret" {
+  secret = "MY_SECRET"
+}
+
+resource "google_compute_instance" "example" {
+  name         = "example-instance"
+  machine_type = "e2-medium"
+  zone         = "us-central1-a"
+
+  metadata = {
+    my_secret_key = data.google_secret_manager_secret_version.my_secret.secret_data
+  }
+}
+
 resource "google_compute_firewall" "k8s_fw" {
   name    = "k8s-fw"
   network = google_compute_network.vpc_network.id
