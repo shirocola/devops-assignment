@@ -15,3 +15,5 @@ terraform-provider-google_*
 
 # JSON or sensitive output files
 *.json
+
+*changed_files.txt
