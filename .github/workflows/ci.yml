@@ -13,6 +13,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      - name: Debug Commit Info
+        run: |
+          echo "Previous commit: ${{ github.event.before }}"
+          echo "Current commit: ${{ github.sha }}"
+
       - name: Determine Changed Files
         id: changed-files
         run: |
@@ -71,7 +76,7 @@ jobs:
           commit_user_name: GitHub Actions
           commit_user_email: actions@github.com
 
-      - name: Apply ArgoCD Application (Optional)
+      - name: Apply ArgoCD Application
         if: env.build == 'true' && ${{ vars.DEPLOY_ARGOCD_APP }} == 'true'
         run: |
           # Install prerequisites
