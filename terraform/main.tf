@@ -35,3 +35,16 @@ resource "google_container_cluster" "primary" {
     ]
   }
 }
+
+resource "google_compute_firewall" "k8s_fw" {
+  name    = "k8s-fw"
+  network = google_compute_network.vpc_network.id
+
+  allow {
+    protocol = "tcp"
+    ports    = ["80", "443"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+}
+
