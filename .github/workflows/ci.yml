@@ -23,17 +23,16 @@ jobs:
       - name: Determine Changed Files
         id: changed-files
         run: |
-            echo "Checking for changes in the following files:"
-            git fetch origin  # Ensure you have the latest changes
-            # Check if there is a previous commit reference
-            if [ -z "${{ github.event.before }}" ]; then
-              echo "No previous commit found. Skipping change detection."
-              echo "changed_files=''" >> $GITHUB_ENV
-            else
-              git diff --name-only ${{ github.event.before }} ${{ github.sha }} > changed_files.txt
-              cat changed_files.txt
-              echo "changed_files=$(cat changed_files.txt | tr '\n' ' ')" >> $GITHUB_ENV
-            fi  
+          echo "Checking for changes in the following files:"
+          git fetch origin  # Ensure you have the latest changes
+          if [ -z "${{ github.event.before }}" ]; then
+            echo "No previous commit found. Skipping change detection."
+            echo "changed_files=''" >> $GITHUB_ENV
+          else
+            git diff --name-only ${{ github.event.before }} ${{ github.sha }} > changed_files.txt
+            cat changed_files.txt
+            echo "changed_files=$(cat changed_files.txt | tr '\n' ' ')" >> $GITHUB_ENV
+          fi  
 
       - name: Check for Application Changes
         id: app-changes
@@ -90,7 +89,7 @@ jobs:
           commit_user_email: actions@github.com
 
       - name: Apply ArgoCD Application
-        if: env.build == 'true' && ${{ vars.DEPLOY_ARGOCD_APP }} == 'true'
+        if: env.build == 'true' && ${{ secrets.ARGOCD_INSTALLED }} == 'true'
         run: |
           # Install prerequisites
           sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates gnupg
@@ -120,16 +119,14 @@ jobs:
           # Decode and write the KUBECONFIG
           echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
 
-          # Install ArgoCD CRDs if not present
-          kubectl get crd applications.argoproj.io || kubectl apply -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/crds/application-crd.yaml
-
-          # Wait for the CRD to be available
-          n=0
-          until kubectl get crd applications.argoproj.io >/dev/null 2>&1 || [ "$n" -ge 5 ]; do
-            n=$((n+1))
-            echo "Waiting for applications.argoproj.io CRD to be available..."
-            sleep 5
-          done
+          # Check if ArgoCD CRDs are already installed
+          if ! kubectl get crd applications.argoproj.io; then
+            echo "Installing ArgoCD CRDs..."
+            kubectl apply -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/crds/application-crd.yaml
+            echo "ArgoCD CRDs installed."
+          else
+            echo "ArgoCD CRDs already installed, skipping installation."
+          fi
           
           # Apply ArgoCD application
           kubectl apply -f argocd/argocd-app.yaml -n argocd
