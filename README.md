@@ -27,3 +27,6 @@ The sample application is developed using Go. Our development team would like to
 **Expected output:** Yaml files and instruction how to deploy the application or command line
 
 7. Create CICD workflow using GitOps pipeline to build and deploy application **Expected output:** GitOps pipeline (Github, Gitlab, Bitbucket, Jenkins) workflow or diagram
+
+
+_________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
