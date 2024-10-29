@@ -30,3 +30,81 @@ The sample application is developed using Go. Our development team would like to
 
 
 _________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+# Step To Setup And Deploy
+
+## Step 1: Configure GCP
+
+1. Create a GCP Project
+    Navigate to the Google Cloud Console: Google Cloud Console
+    Create a New Project:
+        Click on the project drop-down in the top navigation bar and select New Project.
+        Fill in the project name and organization (if applicable), then click Create.
+
+2. Enable Required APIs
+    In the Google Cloud Console, navigate to APIs & Services > Library.
+    Enable the following APIs:
+        Kubernetes Engine API
+        Cloud Build API (if applicable for CI/CD)
+        Container Registry API (if using Google Container Registry)
+        Secret Manager API
+    Search for each API and click Enable.
+
+3. Set Up Billing
+    Ensure that billing is enabled for your project. You can set this up in the Billing section of the Google Cloud Console.
+
+4. Create a Service Account
+    Navigate to IAM & Admin > Service Accounts.
+    Click Create Service Account.
+        Service Account Name: Enter a name (e.g., GKE Admin).
+        Service Account ID: This will auto-generate; you can leave it as is.
+        Click Create and Continue.
+
+5. Assign Roles to Service Account
+    Select Roles:
+        Add the following roles:
+            Kubernetes Engine Admin
+            Viewer (or more specific roles as needed)
+            Service Account User
+            Secret Manager Secret Accessor
+            Compute Admin
+            Kubernetes Engine Admin
+    Click Continue and then Done.
+
+6. Generate and Download the Service Account Key
+    Find your newly created service account in the list and click on it.
+    Navigate to the Keys tab and click Add Key > Create New Key.
+    Choose JSON as the key type and click Create.
+    Download the JSON key file. This file will be used for authentication.
+
+# Step 2: Set Up ArgoCD
+
+1. Install ArgoCD
+    Use Helm (Recommended Method):
+    If you have Helm installed, you can add the ArgoCD Helm repository and install it:
+
+    ```
+    helm repo add argo https://argoproj.github.io/argo-helm
+    helm repo update
+    kubectl create namespace argocd
+    helm install argocd argo/argo-cd -n argocd
+    ```
+
+2. Access ArgoCD UI
+    To access the ArgoCD UI, you need to port-forward the service:
+    ```
+    kubectl port-forward svc/argocd-server -n argocd 8080:443
+    ```
+
+3. Login to ArgoCD
+    The default username is admin.
+    To get the initial password, run:
+    ```
+    kubectl get pods -n argocd
+    ```
+    Find the ArgoCD Server pod and get the password:
+    ```
+    kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath="{.data.password}" | base64 --decode
+    ```
+    Use this password to log in.
+

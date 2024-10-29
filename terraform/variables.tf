@@ -3,7 +3,6 @@
 variable "project_id" {
   description = "GCP Project ID"
   type        = string
-  default     = "devops-assignment-439616"
 }
 
 variable "region" {
