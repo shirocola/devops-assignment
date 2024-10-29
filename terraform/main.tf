@@ -1,5 +1,3 @@
-# main.tf
-
 # VPC Network
 resource "google_compute_network" "vpc_network" {
   name                    = var.network_name
@@ -44,7 +42,24 @@ data "google_secret_manager_secret_version" "my_secret" {
 resource "google_compute_instance" "example" {
   name         = "example-instance"
   machine_type = "e2-medium"
-  zone         = "us-central1-a"
+  zone         = var.zone                          # Use the variable for zone
+
+  # Boot disk configuration
+  boot_disk {
+    initialize_params {
+      image = "debian-cloud/debian-11"            # Specify a boot disk image
+      size  = 10                                   # Size in GB
+    }
+  }
+
+  # Network interface configuration
+  network_interface {
+    network    = google_compute_network.vpc_network.id
+    subnetwork = google_compute_subnetwork.subnet.id
+    access_config {
+      # Ephemeral public IP
+    }
+  }
 
   metadata = {
     my_secret_key = data.google_secret_manager_secret_version.my_secret.secret_data
@@ -62,4 +77,3 @@ resource "google_compute_firewall" "k8s_fw" {
 
   source_ranges = ["0.0.0.0/0"]
 }
-
