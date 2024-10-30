@@ -18,6 +18,11 @@ jobs:
         with:
           fetch-depth: 0  # Fetch the entire history for accurate commit references
 
+      - name: Set Git User
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+
       - name: Debug Commit Info
         run: |
           echo "Previous commit: ${{ github.event.before }}"
@@ -75,14 +80,21 @@ jobs:
         run: |
           sed -i "s|newTag:.*|newTag: '${{ github.sha }}'|g" k8s/overlays/prod/kustomization.yaml
           sed -i "s|newName:.*|newName: '${{ secrets.DOCKERHUB_USERNAME }}/hello-api'|g" k8s/overlays/prod/kustomization.yaml
-          
-          # Check for changes before committing
-          git diff --exit-code || (git add k8s/overlays/prod/kustomization.yaml && git commit -m "Update image tag to ${{ github.sha }}")
+          # Debug the updated kustomization.yaml
+          cat k8s/overlays/prod/kustomization.yaml
+          git add k8s/overlays/prod/kustomization.yaml
 
-      - name: Set Git User
+      - name: Commit Changes
+        if: env.build == 'true'
         run: |
-          git config --global user.email "actions@github.com"
-          git config --global user.name "GitHub Actions"
+          git commit -m "Update image tag to ${{ github.sha }}" || echo "No changes to commit; skipping."
+
+      - name: Pull Latest Changes
+        if: env.build == 'true'
+        run: |
+          git fetch origin
+          git checkout main || echo "Checkout failed; continuing."
+          git reset --hard origin/main || echo "Reset failed; continuing."
 
       - name: Push Changes
         if: env.build == 'true'
