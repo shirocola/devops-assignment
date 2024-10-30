@@ -21,5 +21,5 @@ func main() {
 
 func getHello(w http.ResponseWriter, r *http.Request) {
 	name := r.URL.Query().Get("name")
-	io.WriteString(w, "Hello Hohoho"+name+"\n")
+	io.WriteString(w, "Hello Please"+name+"\n")
 }
