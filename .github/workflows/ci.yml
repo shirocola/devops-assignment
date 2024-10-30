@@ -49,12 +49,6 @@ jobs:
             echo "build=false" >> $GITHUB_ENV
           fi
 
-      - name: Set up Go
-        if: env.build == 'true'
-        uses: actions/setup-go@v3
-        with:
-          go-version: '1.21'
-
       - name: Build the Docker Image
         if: env.build == 'true'
         run: |
@@ -81,36 +75,18 @@ jobs:
         run: |
           sed -i "s|newTag:.*|newTag: '${{ github.sha }}'|g" k8s/overlays/prod/kustomization.yaml
           sed -i "s|newName:.*|newName: '${{ secrets.DOCKERHUB_USERNAME }}/hello-api'|g" k8s/overlays/prod/kustomization.yaml
-          # Debug the updated kustomization.yaml
-          cat k8s/overlays/prod/kustomization.yaml
-          git add k8s/overlays/prod/kustomization.yaml
+          
+          # Check for changes before committing
+          git diff --exit-code || (git add k8s/overlays/prod/kustomization.yaml && git commit -m "Update image tag to ${{ github.sha }}")
 
       - name: Set Git User
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
 
-      - name: Commit Changes
+      - name: Push Changes
         if: env.build == 'true'
         run: |
-          git commit -m "Update image tag to ${{ github.sha }}"
-
-        shell: bash
-
-      - name: Pull Latest Changes
-        if: env.build == 'true'
-        run: |
-          git fetch origin
-          git checkout main || echo "Checkout failed; continuing."
-          git reset --hard origin/main || echo "Reset failed; continuing."
-
-      - name: Commit and Push Changes
-        if: env.build == 'true'
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add k8s/overlays/prod/kustomization.yaml
-          git commit -m "Update image tag to ${{ github.sha }}" || echo "No changes to commit; skipping."
           git push origin main || echo "Push failed; you may need to resolve conflicts."
 
       - name: Apply ArgoCD Application
@@ -154,7 +130,7 @@ jobs:
             echo "Waiting for applications.argoproj.io CRD to be available..."
             sleep 5
           done
-          
+
           # Apply ArgoCD application
           kubectl apply -f argocd/argocd-app.yaml -n argocd
         shell: bash
