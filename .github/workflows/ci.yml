@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  ARGOCD_INSTALLED: false  # Set this to true when ArgoCD is installed
+  ARGOCD_INSTALLED: true  # Set this to true when ArgoCD is installed
 
 jobs:
   build:
