@@ -78,6 +78,12 @@ ________________________________________________________________________________
     - Choose **JSON** as the key type and click **Create**.
     - Download the JSON key file. This file will be used for authentication.
 
+7. **Go to repository cd to terraform and and run:**
+    ```bash
+    terraform init
+    terraform apply
+    ```
+
 ## Step 2: Set Up ArgoCD
 
 1. **Install ArgoCD**
