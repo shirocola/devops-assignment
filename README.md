@@ -108,3 +108,10 @@ ________________________________________________________________________________
     ```
     Use this password to log in.
 
+# Set Secret and Variable in GitHub Actions
+    ARGOCD_INSTALLED - true or false
+    DOCKERHUB_TOKEN - your_dockerhub_token
+    DOCKERHUB_USERNAME - your_dockerhub_username
+    GOOGLE_APPLICATION_CREDENTIALS_JSON - your key json same as terraform
+    KUBECONFIG - you can get it by go to your cloud shell cd to .kube and cat config (gcloud container clusters list --project your-project-id
+)
