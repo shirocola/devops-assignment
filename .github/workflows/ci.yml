@@ -81,6 +81,11 @@ jobs:
         run: |
           sed -i "s|newTag:.*|newTag: '${{ github.sha }}'|g" k8s/overlays/prod/kustomization.yaml
           sed -i "s|newName:.*|newName: '${{ secrets.DOCKERHUB_USERNAME }}/hello-api'|g" k8s/overlays/prod/kustomization.yaml
+          # Debug the updated kustomization.yaml
+          cat k8s/overlays/prod/kustomization.yaml
+          git add k8s/overlays/prod/kustomization.yaml
+          git commit -m "Update image tag to ${{ github.sha }}"
+
         shell: bash
 
       - name: Pull Latest Changes
@@ -98,7 +103,6 @@ jobs:
           git add k8s/overlays/prod/kustomization.yaml
           git commit -m "Update image tag to ${{ github.sha }}" || echo "No changes to commit; skipping."
           git push origin main || echo "Push failed; you may need to resolve conflicts."
-
 
       - name: Apply ArgoCD Application
         if: env.build == 'true' && env.ARGOCD_INSTALLED == 'true'
@@ -124,7 +128,7 @@ jobs:
           # Authenticate with Google Cloud
           gcloud auth activate-service-account --key-file=$HOME/gcloud-key.json
           gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
-          
+
           # Create the .kube directory if it doesn't exist
           mkdir -p $HOME/.kube
 
