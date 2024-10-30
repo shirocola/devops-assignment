@@ -125,4 +125,4 @@ run command
 kubectl get svc -n hello-api-namespace
 ```
 
-curl "http://35.232.91.202/:8080?name=YourName"
+curl "http://EXTERNAL.IP/:8080?name=YourName"
