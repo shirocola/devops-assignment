@@ -17,5 +17,6 @@ spec:
       containers:
         - name: hello-api
           image: shirocola/hello-api:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
