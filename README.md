@@ -126,3 +126,14 @@ kubectl get svc -n hello-api-namespace
 ```
 
 curl "http://EXTERNAL.IP/:8080?name=YourName"
+
+# Destroy Resource
+
+go to cloud shell and run:
+```
+gcloud compute firewall-rules delete your-filewall-rule-na,e --project=your-project-id
+```
+in terminal
+```
+terraform destroy
+```
