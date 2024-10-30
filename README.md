@@ -48,6 +48,7 @@ ________________________________________________________________________________
         Cloud Build API (if applicable for CI/CD)
         Container Registry API (if using Google Container Registry)
         Secret Manager API
+        Cloud Resource Manager API
     Search for each API and click Enable.
 
 3. Set Up Billing
@@ -113,5 +114,15 @@ ________________________________________________________________________________
     DOCKERHUB_TOKEN - your_dockerhub_token
     DOCKERHUB_USERNAME - your_dockerhub_username
     GOOGLE_APPLICATION_CREDENTIALS_JSON - your key json same as terraform
-    KUBECONFIG - you can get it by go to your cloud shell cd to .kube and cat config (gcloud container clusters list --project your-project-id
+    KUBECONFIG - you can get it by go to your cloud shell cd to .kube and cat config | base64 (gcloud container clusters list --project your-project-id
 )
+
+# Check web Deploy
+
+go to cloud shell
+run command
+```
+kubectl get svc -n hello-api-namespace
+```
+
+copy EXTERNAL-IP and open in browser
