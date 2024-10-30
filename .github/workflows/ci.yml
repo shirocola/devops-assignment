@@ -83,6 +83,11 @@ jobs:
           sed -i "s|newName:.*|newName: '${{ secrets.DOCKERHUB_USERNAME }}/hello-api'|g" k8s/overlays/prod/kustomization.yaml
         shell: bash
 
+      - name: Pull Latest Changes
+        if: env.build == 'true'
+        run: |
+          git pull origin main --rebase || echo "Pull failed; continuing."
+
       - name: Commit and Push Changes
         if: env.build == 'true'
         uses: stefanzweifel/git-auto-commit-action@v4
