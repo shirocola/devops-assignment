@@ -71,11 +71,107 @@ ________________________________________________________________________________
             - Compute Admin
     - Click **Continue** and then **Done**.
 
-6. **Generate and Download the Service Account Key**
-    - Find your newly created service account in the list and click on it.
-    - Navigate to the **Keys** tab and click **Add Key > Create New Key**.
-    - Choose **JSON** as the key type and click **Create**.
-    - Download the JSON key file. This file will be used for authentication.
+6. **Authentication Using Workload Identity Federation**
+
+   1. **Set Up Workload Identity Pool**
+      - In the **Google Cloud Console**, navigate to **IAM & Admin > Workload Identity Federation**.
+      - Click on **Create Pool**.
+      - Name your pool (e.g., `github-actions-pool`), and add a description.
+      - Click **Continue**.
+
+   2. **Create an OIDC Provider in the Pool**
+      - Select the newly created Workload Identity Pool and click **Add Provider**.
+      - Choose **OIDC** as the identity provider type.
+      - For **Provider ID**, enter a unique name (e.g., `github-provider`).
+      - Under **Issuer URI**, use the GitHub Actions OIDC URI:
+        ```
+        https://token.actions.githubusercontent.com
+        ```
+      - In the **Attribute Mapping** section, set `google.subject` to map to the GitHub claim `assertion.sub`:
+        ```
+        google.subject: "assertion.sub"
+        ```
+      - Optionally, add a condition to restrict which GitHub repositories can authenticate. For example, to restrict access to a specific repository:
+        ```
+        assertion.repository == "<YOUR_GITHUB_USERNAME>/<YOUR_REPOSITORY_NAME>"
+        ```
+      - Click **Save**.
+
+   3. **Link the Service Account to the Workload Identity Pool**
+      - In the **Google Cloud Console**, navigate to **IAM & Admin > Service Accounts**.
+      - Select the service account you created for GitHub Actions (e.g., `github-actions-sa`).
+      - Under **IAM & Admin > IAM**, add the following role to the service account if not already assigned:
+        - `roles/iam.workloadIdentityUser` on the Workload Identity Pool. The member should be in the format:
+        ```
+        serviceAccount:<YOUR_PROJECT_ID>.svc.id.goog[gcp-project-id/service-account-id]
+        ```
+      - Verify the service account has the necessary permissions for your GCP resources.
+
+   4. **Configure GitHub Actions**
+      - Update your GitHub Actions workflow to use the workload identity provider instead of a JSON key file.
+      - Use the following configuration in your workflow:
+
+      ```yaml
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: "projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
+          service_account: "github-actions-sa@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com"
+      ```
+
+   5. **Set Up GitHub Secrets**
+      - In your GitHub repository, go to **Settings > Secrets and variables > Actions**.
+      - Add secrets for `GCP_PROJECT_ID` and `GCP_PROJECT_NUMBER` if they are not already present.
+
+
+    1. ***Set Up Workload Identity Pool**
+    - In the **Google Cloud Console**, navigate to **IAM & Admin > Workload Identity Federation**.
+    - Click on **Create Pool**.
+    - Name your pool (e.g., `github-actions-pool`), and add a description.
+    - Click **Continue**.
+
+    2. ***Create an OIDC Provider in the Pool**
+    - Select the newly created Workload Identity Pool and click **Add Provider**.
+    - Choose **OIDC** as the identity provider type.
+    - For **Provider ID**, enter a unique name (e.g., `github-provider`).
+    - Under **Issuer URI**, use the GitHub Actions OIDC URI:
+        ```
+        https://token.actions.githubusercontent.com
+        ```
+    - In the **Attribute Mapping** section, set `google.subject` to map to the GitHub claim `assertion.sub`:
+        ```
+        google.subject: "assertion.sub"
+        ```
+    - Optionally, add a condition to restrict which GitHub repositories can authenticate. For example, to restrict access to a specific repository:
+        ```
+        assertion.repository == "<YOUR_GITHUB_USERNAME>/<YOUR_REPOSITORY_NAME>"
+        ```
+    - Click **Save**.
+
+    3. ***Link the Service Account to the Workload Identity Pool**
+    - In the **Google Cloud Console**, navigate to **IAM & Admin > Service Accounts**.
+    - Select the service account you created for GitHub Actions (e.g., `github-actions-sa`).
+    - Under **IAM & Admin > IAM**, add the following role to the service account if not already assigned:
+        - `roles/iam.workloadIdentityUser` on the Workload Identity Pool. The member should be in the format:
+        ```
+        serviceAccount:<YOUR_PROJECT_ID>.svc.id.goog[gcp-project-id/service-account-id]
+        ```
+    - Verify the service account has the necessary permissions for your GCP resources.
+
+    4. ***Configure GitHub Actions**
+    - Update your GitHub Actions workflow to use the workload identity provider instead of a JSON key file.
+    - Use the following configuration in your workflow:
+
+    ```yaml
+    - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+        workload_identity_provider: "projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
+        service_account: "github-actions-sa@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com"
+    
+    5. ***Set Up GitHub Secrets
+        In your GitHub repository, go to Settings > Secrets and variables > Actions.
+        Add secrets for GCP_PROJECT_ID and GCP_PROJECT_NUMBER if they are not already present.
 
 7. **Go to repository cd to terraform and and run:**
     ```bash
@@ -122,7 +218,6 @@ ________________________________________________________________________________
 - **ARGOCD_INSTALLED** - true or false
 - **DOCKERHUB_TOKEN** - your Docker Hub token
 - **DOCKERHUB_USERNAME** - your Docker Hub username
-- **GOOGLE_APPLICATION_CREDENTIALS_JSON** - your key JSON (same as Terraform)
 - **KUBECONFIG** - You can get it by going to your Cloud Shell, `cd` to `.kube`, and run:
     ```bash
     cat config | base64
