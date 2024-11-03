@@ -38,6 +38,12 @@ jobs:
           export_environment_variables: true
           cleanup_credentials: true
       
+      - name: Install GKE Auth Plugin
+        run: |
+          sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates gnupg
+          echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+          sudo apt-get update && sudo apt-get install -y google-cloud-cli-gke-gcloud-auth-plugin
+        
       - name: Configure GKE Credentials
         run: |
           echo "Configuring GKE credentials for cluster access..."
@@ -45,8 +51,7 @@ jobs:
             --zone us-central1-a \
             --project ${{ secrets.GCP_PROJECT_ID }} || echo "Failed to configure GKE credentials."
           kubectl config current-context || echo "Failed to set Kubernetes context."
-  
-  
+        
       - name: Check gcloud auth configuration
         run: |
           gcloud auth list
