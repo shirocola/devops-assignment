@@ -8,4 +8,4 @@ patchesStrategicMerge:
 
 images:
   - name: shirocola/hello-api
-    newTag: '5b1c7ddaee7614760fb6b2df1d7a667d5aa902ac'
+    newTag: 'd50aa43deec5bfdc20aac48a691b1bb5803cd58a'
