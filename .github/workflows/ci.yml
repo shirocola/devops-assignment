@@ -37,6 +37,14 @@ jobs:
           create_credentials_file: true
           export_environment_variables: true
           cleanup_credentials: true
+      
+      - name: Configure GKE Credentials
+        run: |
+          echo "Configuring GKE credentials for cluster access..."
+          gcloud container clusters get-credentials hello-api-cluster \
+            -- zone us-central1-a \
+            -- project ${{ secrets.GCP_PROJECT_ID }} || echo "Failed to configure GKE credentials."
+          kubectl config current-context || echo "Failed to set Kubernetes context."
   
       - name: Check gcloud auth configuration
         run: |
