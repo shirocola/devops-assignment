@@ -31,12 +31,6 @@ jobs:
           export_environment_variables: true
           cleanup_credentials: true
 
-      - name: Set Google Cloud Project
-        run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
-
-      - name: Test GCP Authentication
-        run: gcloud auth list
-
       - name: Determine Changed Files
         id: changed-files
         run: |
@@ -101,8 +95,7 @@ jobs:
           echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee /etc/apt/sources.list.d/google-cloud-sdk.list > /dev/null
           sudo apt-get update && sudo apt-get install -y google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin
           
-          # Set the GCP project and configure kubectl
-          gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+          # Configure kubectl
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
