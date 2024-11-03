@@ -1,5 +1,3 @@
-# variables.tf
-
 variable "project_id" {
   description = "GCP Project ID"
   type        = string
@@ -32,4 +30,10 @@ variable "network_name" {
 variable "gcp_service_account_email" {
   description = "GCP Service Account Email"
   type        = string
+}
+
+variable "secret_data" {
+  description = "Sensitive data to store in the secret version"
+  type        = string
+  sensitive   = true
 }
