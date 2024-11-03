@@ -86,6 +86,10 @@ ________________________________________________________________________________
 ## Step 2: Set Up ArgoCD
 
 1. **Install ArgoCD**
+    - Fetching Kube context
+        ```bash
+        gcloud container clusters get-credentials <CLUSTER_NAME> --zone <CLUSTER_ZONE> --project <PROJECT_ID>
+        ```
     - Use Helm (Recommended Method):
         If you have Helm installed, you can add the ArgoCD Helm repository and install it:
         ```bash
