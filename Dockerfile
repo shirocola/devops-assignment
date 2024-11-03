@@ -19,6 +19,9 @@ RUN go build -o hello-api
 # Stage 2: Create runtime image
 FROM alpine:latest
 
+# Install curl for heath checks
+RUN apk add --no-cache curl
+
 # Add a non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
