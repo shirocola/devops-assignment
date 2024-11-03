@@ -69,7 +69,6 @@ ________________________________________________________________________________
             - Service Account User
             - Secret Manager Secret Accessor
             - Compute Admin
-            - Kubernetes Engine Admin
     - Click **Continue** and then **Done**.
 
 6. **Generate and Download the Service Account Key**
