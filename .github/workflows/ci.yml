@@ -11,6 +11,7 @@ permissions:
 
 env:
   ARGOCD_INSTALLED: false
+  GKE_PLUGIN_INSTALLED: false
 
 jobs:
   build:
@@ -22,14 +23,8 @@ jobs:
         with:
           fetch-depth: 0
       
-      - name: Debug Authentication Info
-        run: |
-          echo "Project ID: ${{ secrets.GCP_PROJECT_ID }}"
-          echo "Project Number: ${{ secrets.GCP_PROJECT_NUMBER }}"
-          echo "Workload Identity Provider: projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
-          echo "Expected Audience: https://iam.googleapis.com/projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
-  
       - name: Authenticate to Google Cloud
+        if: env.GKE_PLUGIN_INSTALLED == 'true'
         uses: google-github-actions/auth@v1
         with:
           workload_identity_provider: "projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
@@ -39,17 +34,15 @@ jobs:
           cleanup_credentials: true
       
       - name: Install GKE Auth Plugin
+        if: env.GKE_PLUGIN_INSTALLED == 'true'
         run: |
           sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates gnupg
-          # Add the Google Cloud public GPG key
           sudo curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
-          # Add the Cloud SDK repository
           echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-          # Update the package lists and install the plugin
           sudo apt-get update && sudo apt-get install -y google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin
         
-        
       - name: Configure GKE Credentials
+        if: env.GKE_PLUGIN_INSTALLED == 'true'
         run: |
           echo "Configuring GKE credentials for cluster access..."
           gcloud container clusters get-credentials hello-api-cluster \
@@ -58,6 +51,7 @@ jobs:
           kubectl config current-context || echo "Failed to set Kubernetes context."
         
       - name: Check gcloud auth configuration
+        if: env.GKE_PLUGIN_INSTALLED == 'true'
         run: |
           gcloud auth list
           gcloud config list
