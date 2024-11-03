@@ -22,6 +22,13 @@ jobs:
         with:
           fetch-depth: 0
       
+      - name: Debug Authentication Info
+        run: |
+          echo "Project ID: ${{ secrets.GCP_PROJECT_ID }}"
+          echo "Project Number: ${{ secrets.GCP_PROJECT_NUMBER }}"
+          echo "Workload Identity Provider: projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
+          echo "Expected Audience: https://iam.googleapis.com/projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
+  
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
@@ -30,25 +37,13 @@ jobs:
           create_credentials_file: true
           export_environment_variables: true
           cleanup_credentials: true
-
-      - name: Debug Authentication Info
+  
+      - name: Check gcloud auth configuration
         run: |
-          echo "Debugging Google Cloud Authentication"
-          echo "Project ID: ${{ secrets.GCP_PROJECT_ID }}"
-          echo "Project Number: ${{ secrets.GCP_PROJECT_NUMBER }}"
-          echo "Workload Identity Provider: projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
-          
-          # Check gcloud auth configuration
           gcloud auth list
           gcloud config list
-          
-          # Print access token (if available)
           gcloud auth application-default print-access-token || echo "Failed to retrieve access token."
-
-          # Check Kubernetes context
           kubectl config current-context || echo "Kubernetes context not set."
-          
-          # Test gcloud API call to ensure credentials are working
           gcloud projects describe ${{ secrets.GCP_PROJECT_ID }} || echo "Failed to authenticate with GCP API."
 
       - name: Determine Changed Files
