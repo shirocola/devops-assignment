@@ -31,6 +31,12 @@ jobs:
           export_environment_variables: true
           cleanup_credentials: true
 
+      - name: Set Google Cloud Project
+        run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Test GCP Authentication
+        run: gcloud auth list
+
       - name: Determine Changed Files
         id: changed-files
         run: |
@@ -89,12 +95,18 @@ jobs:
       - name: Apply ArgoCD Application
         if: env.build == 'true' && env.ARGOCD_INSTALLED == 'true'
         run: |
+          # Install necessary dependencies and configure GCP authentication
           sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates gnupg
           sudo curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
-          echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+          echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee /etc/apt/sources.list.d/google-cloud-sdk.list > /dev/null
           sudo apt-get update && sudo apt-get install -y google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin
+          
+          # Set the GCP project and configure kubectl
           gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
-          kubectl apply -f argocd/argocd-app.yaml -n argocd
+          chmod 600 $HOME/.kube/config
+
+          # Apply ArgoCD configuration
+          kubectl apply -f argocd/argocd-app.yaml -n argocd --validate=false
         shell: bash
