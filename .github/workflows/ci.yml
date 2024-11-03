@@ -6,125 +6,80 @@ on:
       - main
 
 env:
-  ARGOCD_INSTALLED: true  # Set this to true when ArgoCD is installed
+  ARGOCD_INSTALLED: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: "projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
+          service_account: "github-actions-sa@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com"
+
       - name: Checkout Code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Fetch the entire history for accurate commit references
+          fetch-depth: 0
 
-      - name: Debug Commit Info
-        run: |
-          echo "Previous commit: ${{ github.event.before }}"
-          echo "Current commit: ${{ github.sha }}"
       - name: Determine Changed Files
         id: changed-files
         run: |
-            echo "Checking for changes in the following files:"
-            git fetch origin  # Ensure you have the latest changes
-            # Check if there is a previous commit reference
-            if [ -z "${{ github.event.before }}" ]; then
-              echo "No previous commit found. Skipping change detection."
-              echo "changed_files=''" >> $GITHUB_ENV
-            else
-              git diff --name-only ${{ github.event.before }} ${{ github.sha }} > changed_files.txt
-              cat changed_files.txt
-              echo "changed_files=$(cat changed_files.txt | tr '\n' ' ')" >> $GITHUB_ENV
-            fi  
+          git fetch origin
+          if [ -z "${{ github.event.before }}" ]; then
+            echo "changed_files=''" >> $GITHUB_ENV
+          else
+            git diff --name-only ${{ github.event.before }} ${{ github.sha }} > changed_files.txt
+            echo "changed_files=$(cat changed_files.txt | tr '\n' ' ')" >> $GITHUB_ENV
+          fi
+
       - name: Check for Application Changes
         id: app-changes
         run: |
-          if [[ "${{ env.changed_files }}" =~ "Dockerfile" || "${{ env.changed_files }}" =~ "main.go" || "${{ env.changed_files }}" =~ "other-app-files" ]]; then
-            echo "Application files have changed."
+          if [[ "${{ env.changed_files }}" =~ "Dockerfile" || "${{ env.changed_files }}" =~ "main.go" ]]; then
             echo "build=true" >> $GITHUB_ENV
           else
-            echo "No application changes detected. Skipping build."
             echo "build=false" >> $GITHUB_ENV
           fi
+
       - name: Set up Go
         if: env.build == 'true'
         uses: actions/setup-go@v3
         with:
           go-version: '1.21'
 
-      - name: Build the Docker Image
+      - name: Build and Push Docker Image
         if: env.build == 'true'
         run: |
-          set -e  # Exit immediately if a command exits with a non-zero status
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/hello-api:${{ github.sha }} .
-        shell: bash
-
-      - name: Log in to Docker Hub
-        if: env.build == 'true'
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Push the Docker Image
-        if: env.build == 'true'
-        run: |
-          set -e  # Exit immediately if a command exits with a non-zero status
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/hello-api:${{ github.sha }}
         shell: bash
 
-      - name: Update Image Tag and Name in K8s Overlay
+      - name: Update Kubernetes Image Tag
         if: env.build == 'true'
         run: |
           sed -i "s|newTag:.*|newTag: '${{ github.sha }}'|g" k8s/overlays/prod/kustomization.yaml
           sed -i "s|newName:.*|newName: '${{ secrets.DOCKERHUB_USERNAME }}/hello-api'|g" k8s/overlays/prod/kustomization.yaml
         shell: bash
 
-      - name: Pull Latest Changes
-        if: env.build == 'true'
-        run: |
-          git pull origin main --rebase || echo "Pull failed; continuing."
       - name: Commit and Push Changes
         if: env.build == 'true'
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: Update image tag to ${{ github.sha }}
           file_pattern: k8s/overlays/prod/kustomization.yaml
-          commit_user_name: GitHub Actions
-          commit_user_email: actions@github.com
+
       - name: Apply ArgoCD Application
         if: env.build == 'true' && env.ARGOCD_INSTALLED == 'true'
         run: |
-          # Install prerequisites
           sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates gnupg
-          # Import the Google Cloud public key
-          curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
-          # Add the Google Cloud SDK repository to apt sources
           echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-          # Update and install Google Cloud SDK and GKE auth plugin
           sudo apt-get update && sudo apt-get install -y google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin
-          # Write JSON credentials to gcloud-key.json directly
-          echo '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}' > $HOME/gcloud-key.json
-          # Validate JSON format for debugging
-          cat $HOME/gcloud-key.json | jq .
-          # Authenticate with Google Cloud
-          gcloud auth activate-service-account --key-file=$HOME/gcloud-key.json
           gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
-          
-          # Create the .kube directory if it doesn't exist
           mkdir -p $HOME/.kube
-          # Decode and write the KUBECONFIG
           echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
-          # Install ArgoCD CRDs if not present
-          kubectl get crd applications.argoproj.io || kubectl apply -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/crds/application-crd.yaml
-          # Wait for the CRD to be available
-          n=0
-          until kubectl get crd applications.argoproj.io >/dev/null 2>&1 || [ "$n" -ge 5 ]; do
-            n=$((n+1))
-            echo "Waiting for applications.argoproj.io CRD to be available..."
-            sleep 5
-          done
-          
-          # Apply ArgoCD application
           kubectl apply -f argocd/argocd-app.yaml -n argocd
         shell: bash
