@@ -3,7 +3,6 @@
 *.tfstate.backup
 *.tfstate.lock.info
 
-
 # Lock file
 .terraform.lock.hcl
 
@@ -16,4 +15,8 @@ terraform-provider-google_*
 # JSON or sensitive output files
 *.json
 
+# Terraform variable files
+*.tfvars
+
+# Other files
 *changed_files.txt
