@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 env:
-  ARGOCD_INSTALLED: true
+  ARGOCD_INSTALLED: false
 
 jobs:
   build:
