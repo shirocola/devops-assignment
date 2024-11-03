@@ -1,9 +1,11 @@
 resources:
   - ../../base
 
-images:
-  - name: shirocola/hello-api
-    newTag: '83047d82ee715df9f5081df7df88f64f1de728ec'
+namePrefix: prod-
 
 patchesStrategicMerge:
   - replicas.yaml
+
+images:
+  - name: shirocola/hello-api
+    newTag: 'latest_commit_sha'
