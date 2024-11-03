@@ -41,8 +41,13 @@ jobs:
       - name: Install GKE Auth Plugin
         run: |
           sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates gnupg
+          # Add the Google Cloud public GPG key
+          sudo curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+          # Add the Cloud SDK repository
           echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-          sudo apt-get update && sudo apt-get install -y google-cloud-cli-gke-gcloud-auth-plugin
+          # Update the package lists and install the plugin
+          sudo apt-get update && sudo apt-get install -y google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin
+        
         
       - name: Configure GKE Credentials
         run: |
