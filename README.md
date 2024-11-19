@@ -52,11 +52,11 @@
           - Use the following values:
             - **Issuer URI**: `https://token.actions.githubusercontent.com`
             - **Attribute Mapping**:
-              ```
+              ```plaintext
               google.subject: "assertion.sub"
               ```
           - Optionally, restrict access by adding a condition:
-            ```
+            ```plaintext
             assertion.repository == "<YOUR_GITHUB_USERNAME>/<YOUR_REPOSITORY_NAME>"
             ```
 
